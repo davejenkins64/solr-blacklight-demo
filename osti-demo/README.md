@@ -35,7 +35,7 @@ Sorting just isn't working for me, returns no records.  Putting sort field name 
 Using
 entry_start_date/entry_end_date pair returns page 1 of 158421 pages, which is the same number of pages if
 there was no filter.  Hmmm.  Aha, they don't want the full date, just MM/DD/YYYY.  Poor design?
-Nope, that doesn't work either.
+
 Hmm, lets try the session cookie approach?  Adding --cookie-jar and --silent to the curl command.
 
 Now I can get the first page for a given date, so I wrote a program to estimate the volume the datafeed would entail. 
@@ -103,6 +103,7 @@ and the types of journal_issue and patent_number.
     but - if not data yet added, will there even be a schema file yet?
 Note: just cd to the solrdata directory in the host.
 
+```
 Change /var/solr/data/osti/conf/managed-schema:
 113c113
 <     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
@@ -112,6 +113,7 @@ Change /var/solr/data/osti/conf/managed-schema:
 <     <uniqueKey>id</uniqueKey>
 ---
 >     <uniqueKey>osti_id</uniqueKey>
+```
 
 Then stop/restart but leave off the solr-precreate osti.
 
@@ -122,6 +124,7 @@ Then load a page of data and change the schema:
 first run, 9m21s, still failing 2 fields above.
 edit file from host again, fix those 2 fields to text. 
 
+```
 Change /var/solr/data/osti/conf/managed-schema:
 468c468
 <   <field name="journal_issue" type="plongs"/>
@@ -136,6 +139,7 @@ Change /var/solr/data/osti/conf/managed-schema:
 \ No newline at end of file
 ---
 > </schema>
+```
 
 Stop/start the container to make sure the changes are seen.  Load
 a day's data again and hope for no errors.
@@ -186,6 +190,7 @@ compute node, either as a member of a Docker swarm or in its own VM.
 All of 2006 should be in, 353 pages, let's benchmark (2-core machine):
 first run to get all in on top of 2020... 3m50s
 
+```
  64 threads 216 real	3m36.832s user	0m29.374s sys	0m20.684s
  32 threads 217 real	3m37.530s user	0m28.794s sys	0m18.413s
  16 threads 221 real	3m41.500s user	0m28.637s sys	0m17.432s
@@ -193,6 +198,7 @@ first run to get all in on top of 2020... 3m50s
   4 threads 270 real	4m30.716s user	0m31.248s sys	0m17.592s
   2 threads 470 real	7m50.225s user	0m21.612s sys	0m11.184s <- died the first time though
   1 threads 805 real	13m25.652s user	0m38.675s sys	0m19.917s
+```
 
 So, 8 threads is the knee of the curve where additonal concurency isn't buying us much throughput.
 Let's load the rest of the years with 8 threads?
@@ -205,6 +211,7 @@ Loading everything into a single Solr with replication (I thin).  Try again with
 shards with 2 replicas?  Break dependence on curl and docker?  It isn't entirely clear where the bottleneck
 is.
 
+```
      pages time output
 2007   739 real	7m53.485s user	0m58.901s sys	0m36.612s
 2008 34345 real	518m7.249s user	47m48.057s sys	29m2.652s
@@ -220,12 +227,18 @@ is.
 2018  3870 real	42m48.327s user	5m8.450s sys	3m10.170s
 2019  3490 real	39m16.387s user	4m36.904s sys	2m49.332s
 2020 11095 real	121m26.063s user	15m1.413s sys	9m8.951s<- partial year up to 11/8
+```
 
+Experimenting with pages of increasing number of rows:
+
+```
 try rows=100 and re-do 2014 (5x times fewer curl/post calls)
 2014   623 real	6m59.615s user	0m52.164s sys	0m31.766s
 
 try rows=1000 and re-do 2014
 2014    63 real	1m12.921s user	0m8.929s sys	0m5.653s
+
+trying rows=10000 didn't return the right number of pages, suspect a 3000-ish limit?
 
 try rows=2000 and re-do 2014 
 2014    32 real	1m6.293s user	0m7.611s sys	0m4.103s
@@ -234,22 +247,22 @@ try rows=3000 and re-do 2014
 2014    21 real	1m15.563s user	0m4.122s sys	0m3.124s
 
 but 4000 still says 21 pages, so the limit is 3000.
-
-trying rows=10000 didn't return the right number of pages, suspect a 3000-ish limit?
+```
 
 So, using separate curl and docker/post processes is a bottleneck on this slow linux machine.
 Hmm, re-do benchmarks with a range of threads and row-sizes?
 
-Get rid of curl altogther using the Perl HTTP::Request and Apache::Solr modules.
+Get rid of curl altogther using the Perl ``HTTP::Request`` and ``Apache::Solr`` modules.
 
-My local perl is missing Apache::Solr::Json, so put it in a docker container so that we can 
-cpanm install Apache::Solr::Json?
+My local perl is missing ``Apache::Solr::Json``, so put it in a docker container so that we can 
+``cpanm install Apache::Solr::Json``?
 
-cpan -T Net::SSLeay is also needed.
+``cpan -T Net::SSLeay`` is also needed.
 
 In the meantime, benchmarks are
 faster with 8 threads and 3000 rows per page on compute node:
 
+```
 2006    27
 2007    43
 2008 21m33
@@ -265,6 +278,7 @@ faster with 8 threads and 3000 rows per page on compute node:
 2018  3m32
 2019  2m58
 2020 10m22
+```
 
 Maybe that is fast enough?  Little need to go much faster if we can reload
 the whole data set in under 2 hours.
