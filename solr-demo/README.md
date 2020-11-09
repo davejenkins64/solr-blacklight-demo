@@ -4,8 +4,8 @@ These are some raw notes on experimenting with a Solr docker image.
 
 ## solr
 
-The first step is to get Solr running locally.  
-My strategy for most things it to run docker containers if possible.  
+The first step is to get Solr running locally. 
+My strategy for most things it to run docker containers if possible. 
 It seems that for Solr, it is possible!
 Sure enough, there is an official docker container on dockerhup called solr.
 https://hub.docker.com/\_/solr

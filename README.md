@@ -4,7 +4,7 @@ Demonstration of search with Solr loaded with OSTI data and blacklight.org
 
 ## solr
 
-The first step is to get Solr running locally.  
+The first step is to get Solr running locally. 
 Sure enough, there is an official docker container on dockerhub called solr.
 
 ```
@@ -50,9 +50,12 @@ COMMITting Solr index changes to http://localhost:8983/solr/gettingstarted/updat
 Time spent: 0:00:01.199
 ```
 
+The ``docker exec ... post -c`` will come in handing when wriitng code
+to load OSTI data.
+
 ### Future Work
 
-It would be interesting to try running multiple Solr isntances with
+It would be interesting to try running multiple Solr instances with
 sharding and replication.  It seems that we can run them as a docker swarm,
 might also be educational to run them in separate VMs or under kubernetes.
 
@@ -76,7 +79,7 @@ created a core called osti.  Let's load some data.
 If we want to make a data stream searchable, we'll want to load
 it into Solr.  First, how big is the stream?  How many items total, per year,
 per day?  How much volume?  My test machine is somewhat limited, if
-the data set is huge, it won't handle it.  
+the data set is huge, it won't handle it. 
 
 Let's start by estimating the volume by day for the past year.
 
@@ -84,7 +87,7 @@ See:
 [osti-demo/estimate_volume_by_day.pl](osti-demo/estimate_volume_by_day.pl)
 
 This is a perl script that uses curl to find the total set of pages
-and gets the first page (20 rows) for each day for the last year.  
+and gets the first page (20 rows) for each day for the last year. 
 We use the number of
 pages times the size of the sample page to estimate volume.
 
@@ -149,15 +152,15 @@ day to keep our cache up to date.  And we can also run it as an
 audit to make sure no operator back-dated any new entries in OSTI.
 
 See:
-[osti-demo/estimate_load_day.pl](osti-demo/load_day.pl)
+[osti-demo/load_day.pl](osti-demo/load_day.pl)
 
 But loading by day would get tedious for the initial bulk load.
 How about we rewrite to handle an entire year:
-[osti-demo/estimate_load_year.pl](osti-demo/load_year.pl)
+[osti-demo/load_year.pl](osti-demo/load_year.pl)
 
 This was still too slow, so how about we throw Perl threads at
-the problem?  
-[osti-demo/estimate_load_year_fast.pl](osti-demo/load_year_fast.pl)
+the problem? 
+[osti-demo/load_year_fast.pl](osti-demo/load_year_fast.pl)
 
 8 threads is about 3-5 times faster.  But it turns out that what
 is really slowing us down is all of the ``curl`` and ``docker exec post -c``
@@ -172,7 +175,7 @@ portability.  I'm calling this load_solr.pl but haven't finished it.
 
 Consistent with my strategy of containerizing as much as possible, let's
 see if we can build a container for blacklight to run in, that can talk to
-the Solr container.  
+the Solr container. 
 See:
 [blacklight-org-demo/Dockerfile](blacklight-org-demo/Dockerfile).
 

@@ -38,7 +38,7 @@ there was no filter.  Hmmm.  Aha, they don't want the full date, just MM/DD/YYYY
 Nope, that doesn't work either.
 Hmm, lets try the session cookie approach?  Adding --cookie-jar and --silent to the curl command.
 
-Now I can get the first page for a given date, so I wrote a program to estimate the volume the datafeed would entail.  
+Now I can get the first page for a given date, so I wrote a program to estimate the volume the datafeed would entail. 
 Size of 20 json records times the number of pages from the last page Link in the link headers
 gives an estimate of bytes for that day.  Note: some days have no entries, but they are likely weekends
 or holidays.
@@ -95,7 +95,7 @@ Add a 'id' column to each before loading?
 Also, journal_issue attribute needs to be string, not integer as auto detected.
 Also patent_number.  The GUI says the schema says they are both org.apache.solr.schema.LongPointField
 
-So, start over with clean solrdata directory.  
+So, start over with clean solrdata directory. 
 
 docker run and solr-precreate the osti core.
 docker exec a shell, find the managed-schema file and change the unique id to osti_id
@@ -176,7 +176,7 @@ Then each thread could load its share of the total pages for the year.
 * Thread 1 would start at page 1 and step forward by total threads.
 * etc.
 
-So that all pages get loaded once.  
+So that all pages get loaded once. 
 
 And for further speed gains (when Solr is running on more than one physical server),
 perhap each thread could also target a separate Solr instance?  But don't expect too
