@@ -23,7 +23,7 @@ Run output says:
 
 2. some things are missing or failed to start, 
 
-'''
+```
 The currently defined JAVA_HOME (/usr/local/openjdk-11) refers to a location
 where java was found but jstack was not found. Continuing.
 OpenJDK 64-Bit Server VM warning: Failed to reserve shared memory. (error = 1)
@@ -40,7 +40,7 @@ OpenJDK 64-Bit Server VM warning: Failed to reserve shared memory. (error = 1)
 2020-10-21 16:45:47.728 WARN  (main) [   ] o.e.j.u.s.S.config Trusting all certificates configured for Client@6573d2f7[provider=null,keyStore=null,trustStore=null]
 2020-10-21 16:45:47.728 WARN  (main) [   ] o.e.j.u.s.S.config No Client EndPointIdentificationAlgorithm configured for Client@6573d2f7[provider=null,keyStore=null,trustStore=null]
 2020-10-21 16:45:47.884 WARN  (main) [   ] o.a.s.c.CoreContainer Not all security plugins configured!  authentication=disabled authorization=disabled.  Solr is only as secure as you make it. Consider configuring authentication/authorization before exposing Solr to users internal or external.  See https://s.apache.org/solrsecurity for more info
-'''
+```
 
 3. may not be secure.
 
@@ -54,10 +54,10 @@ pane "No cores available" "Go and create one"
 But wait, there is a better way to run this as a single node with
 persistent data:
 
-'''
+```
 $ mkdir solrdata
 $ docker run -d -v "$PWD/solrdata:/var/solr" -p 8983:8983 --name my_solr solr:8 solr-precreate gettingstarted
-'''
+```
 
 This creates a cor called gettingstarted, I used osti for my demo.
 
@@ -67,13 +67,13 @@ host and just chmod g+w?
 
 And to load some sample data:
 
-'''
+```
 $ docker exec -it my_solr post -c gettingstarted example/exampledocs/manufacturers.xml
-'''
+```
 
 You can also post JSON data.  Output looks like:
 
-'''
+```
 usr/local/openjdk-11/bin/java -classpath /opt/solr/dist/solr-core-8.6.3.jar -Dauto=yes -Dc=gettingstarted -Ddata=files org.apache.solr.util.SimplePostTool example/exampledocs/manufacturers.xml
 SimplePostTool version 5.0.0
 Posting files to [base] url http://localhost:8983/solr/gettingstarted/update...
@@ -82,7 +82,7 @@ POSTing file manufacturers.xml (application/xml) to [base]
 1 files indexed.
 COMMITting Solr index changes to http://localhost:8983/solr/gettingstarted/update...
 Time spent: 0:00:01.199
-'''
+```
 
 That worked, I see 11 manufacturers records when I search *.*.
 in the GUI.
@@ -92,9 +92,9 @@ container name and port conflicts with the next demo.
 
 How about the single image demo?
 
-'''
+```
 $ docker run --name solr_demo -d -p 8983:8983 solr:8 solr-demo
-'''
+```
 
 Runs a different data set, this time with 46 items.
 
@@ -105,13 +105,13 @@ Runs a different data set, this time with 46 items.
 Back to original demo, but starting up using docker-compose and its
 docker-compose.yml and 'docker-compose up -d'.  Note:
 
-'''
+```
 WARNING: The Docker Engine you're using is running in swarm mode.
 
 Compose does not use swarm mode to deploy services to multiple nodes in a swarm. All containers will be scheduled on the current node.
 
 To deploy your application across the swarm, use `docker stack deploy`.
-'''
+```
 
 So, perhaps it is time to get multiple VMs running, each as a member of
 a docker swarm before working on the cluster install below.
@@ -124,9 +124,9 @@ The data isn't getting loaded when the volume is created by docker compose.
 Race condition in the compose file?  Just load data manually using
 new container name:
 
-'''
+```
 docker exec -it solr-demo_solr_1 post -c gettingstarted example/exampledocs/manufacturers.xml
-'''
+```
 
 #### Clusters
 
@@ -141,10 +141,10 @@ Both swarms and clusters will wait for another day.
 The blacklight.org wiki wants to verify java version > 1.8
 So, with the solr container running:
 
-'''
+```
 docker exec -it <container id> /bin/bash
 java --version
-'''
+```
 
 Says: 11.0.8, so we are good.
 
@@ -158,7 +158,7 @@ into Lucene/Solr:
 From the source code, create a collection.  For any fields in the input
 data that Solr miss-classifies, fix the schema with POST.
 
-'''
+```
 solr*/*/var/tmp/solr-8.6.1/solr/example/films/README.txto
 
 curl http://localhost:8983/solr/films/schema -X POST -H 'Content-type:application/json' --data-binary '{
@@ -174,7 +174,7 @@ curl http://localhost:8983/solr/films/schema -X POST -H 'Content-type:applicatio
         "stored":true
     }
 }'
-'''
+```
 
 So, in this example, the "name" and "initial_release_date" fields must
 not have been classified correctly.  In the case of films, maybe name
@@ -184,7 +184,7 @@ initial_release_date should treat the date as a date?
 The input data is XML, JSON and CSV.  The JSON file is an array of films.
 One JSON record looks like:
 
-'''
+```
   {
     "id": "/en/harry_potter_and_the_order_of_the_phoenix_2007",
     "initial_release_date": "2007-06-28",
@@ -201,7 +201,7 @@ One JSON record looks like:
       "David Yates"
     ]
   }
-'''
+```
 
 But in my case, since I need to change the uniqueId for the OSTI data
 set I just made edits to the managed-schema to add the 3 fields

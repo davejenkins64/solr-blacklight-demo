@@ -20,10 +20,10 @@ pane "No cores available" "Go and create one"
 But wait, there is a better way to run this as a single node with
 persistent data:
 
-'''
+```
 $ mkdir solrdata
 $ docker run -d -v "$PWD/solrdata:/var/solr" -p 8983:8983 --name my_solr solr:8 solr-precreate gettingstarted
-'''
+```
 
 This creates a core called gettingstarted, I used osti for my demo.
 
@@ -33,13 +33,13 @@ host and just chmod g+w?
 
 And to load some sample data:
 
-'''
+```
 $ docker exec -it my_solr post -c gettingstarted example/exampledocs/manufacturers.xml
-'''
+```
 
 You can also post JSON data.  Output looks like:
 
-'''
+```
 usr/local/openjdk-11/bin/java -classpath /opt/solr/dist/solr-core-8.6.3.jar -Dauto=yes -Dc=gettingstarted -Ddata=files org.apache.solr.util.SimplePostTool example/exampledocs/manufacturers.xml
 SimplePostTool version 5.0.0
 Posting files to [base] url http://localhost:8983/solr/gettingstarted/update...
@@ -48,7 +48,7 @@ POSTing file manufacturers.xml (application/xml) to [base]
 1 files indexed.
 COMMITting Solr index changes to http://localhost:8983/solr/gettingstarted/update...
 Time spent: 0:00:01.199
-'''
+```
 
 ### Future Work
 
@@ -61,10 +61,10 @@ might also be educational to run them in separate VMs or under kubernetes.
 The blacklight.org wiki wants to verify java version > 1.8
 So, with the solr container running:
 
-'''
+```
 docker exec -it <container id> /bin/bash
 java --version
-'''
+```
 
 Says: 11.0.8, so we are good.
 
