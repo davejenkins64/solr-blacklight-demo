@@ -1,0 +1,15 @@
+After creating the new core for osti, cd solrdata/data/osti/conf
+and change the "id" field to "osti_id":
+
+  <uniqueKey>osti_id</uniqueKey>
+
+  <field name="osti_id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
+
+Also, because Solr will autodetect the wrong type for these three
+fields (plong), add these lines as a hint.
+
+  <field name="journal_issue" type="text_general"/>
+  <field name="journal_volume" type="text_general"/>
+  <field name="patent_number" type="text_general"/>
+
+Restart solr.

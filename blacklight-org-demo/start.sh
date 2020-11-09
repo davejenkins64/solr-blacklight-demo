@@ -1,0 +1,5 @@
+#!/bin/bash
+
+docker run -d \
+    -p 3000:3000 \
+    blacklight_org_demo
