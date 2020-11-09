@@ -1,5 +1,7 @@
 # Loading OSTI Data
 
+## Learning the API
+
 These are some raw notes on the process of dumping data from OSTI 
 into Solr and attempting to improve the speed of the scraping.
 
@@ -22,7 +24,7 @@ I dump the headers so that I can see the HATEOS Link header.
 Plus, now we can use the received headers as the cookie jar to 
 keep session id for subsequent searches?
 
-Try '?sort=entry_date&order=desc' or '?publication_date_start=YESTERDAY&publication_date_end=TODDAY'
+Try ``'?sort=entry_date&order=desc'`` or ``'?publication_date_start=YESTERDAY&publication_date_end=TODDAY'``
 where YESTERDAY and TODAY are YYYY-MM-DDTHH:MM:SSZ formatted date/time strings.
 The either might be better for a audit to see if any new entries were back-dated?
 
@@ -36,7 +38,9 @@ Using
 entry_start_date/entry_end_date pair returns page 1 of 158421 pages, which is the same number of pages if
 there was no filter.  Hmmm.  Aha, they don't want the full date, just MM/DD/YYYY.  Poor design?
 
-Hmm, lets try the session cookie approach?  Adding --cookie-jar and --silent to the curl command.
+Hmm, lets try the session cookie approach?  Adding ``--cookie-jar`` and ``--silent`` to the curl command.
+
+## Estimating
 
 Now I can get the first page for a given date, so I wrote a program to estimate the volume the datafeed would entail. 
 Size of 20 json records times the number of pages from the last page Link in the link headers
@@ -58,9 +62,7 @@ So, in the last year I'm estimating 507 MB of data.  Perhaps 6GB total?
 Aside: now that I've loaded all of the data, it turns out to be 310168 citations and 5.56gb total.
 but that may also be counting the deleted but not garbage collected citations loaded twice?
 
-Well, perhaps it is time to start dumping files for whole days and looking for dups?
-Can I post them into Solr to make them searchable?
-Can I hook up a blacklight to the Solr to use its GUI to search?
+## Naive Loading
 
 Next step, write a program that retrieves page 1 for a given day and reads its headers to find out how
 many pages, then loads it into solr.  Then, for each of the remaining pages, gets them and load them
@@ -86,8 +88,6 @@ Second load of same day took
 
 Seems like, since Solr assigns the ids, that posting the same content multiple
 times enters it multiple times.
-8283 before 4th run on 11/4 data, see if it moves, 15, 10, 7 minutes
-dj@filer /tmp $ # but now 11024 and 7 minutes. 13765 8m - duplicates are stored?
 
 Can I get the schema to treat some osti data as the primary key?
 Add a 'id' column to each before loading?
@@ -100,7 +100,7 @@ So, start over with clean solrdata directory.
 docker run and solr-precreate the osti core.
 docker exec a shell, find the managed-schema file and change the unique id to osti_id
 and the types of journal_issue and patent_number.
-    but - if not data yet added, will there even be a schema file yet?
+    but - if no data yet added, will there even be a schema file yet?
 Note: just cd to the solrdata directory in the host.
 
 ```
@@ -155,6 +155,8 @@ Now 11/4's data loads with no errors in 7m26s.  3699 loaded (was expecting
 Try again to make sure they stay unique.  Yes, max docs got up, deleted too.
 but Num docs is correct.
 
+## Naive Loading Years
+
 A script that can load one day's data it useful to run daily, or even multiple
 times daily to ensure that we've indexed all data for that day.  But it is
 harder to manage to load, say, a year's data.  So, Let's modify the script to
@@ -163,11 +165,7 @@ be able to load a calendar year at a time.
 2020 has 10999 pages on 11/6, at about 7m/day and 220 odd days (no weekends)
 it could take a whole day to load a year.
 
-Loaded 2020 (10999 pages) in:
-
-output of time goes here.
-
-## Future work 
+## Threaded Loading
 
 Top says the single threaded version causes the Solr daemon to mostly use ~5% of cpu.
 So, try 10 threads in parallel?
@@ -229,6 +227,8 @@ is.
 2020 11095 real	121m26.063s user	15m1.413s sys	9m8.951s<- partial year up to 11/8
 ```
 
+## Loading Big Pages
+
 Experimenting with pages of increasing number of rows:
 
 ```
@@ -251,13 +251,6 @@ but 4000 still says 21 pages, so the limit is 3000.
 
 So, using separate curl and docker/post processes is a bottleneck on this slow linux machine.
 Hmm, re-do benchmarks with a range of threads and row-sizes?
-
-Get rid of curl altogther using the Perl ``HTTP::Request`` and ``Apache::Solr`` modules.
-
-My local perl is missing ``Apache::Solr::Json``, so put it in a docker container so that we can 
-``cpanm install Apache::Solr::Json``?
-
-``cpan -T Net::SSLeay`` is also needed.
 
 In the meantime, benchmarks are
 faster with 8 threads and 3000 rows per page on compute node:
@@ -282,3 +275,19 @@ faster with 8 threads and 3000 rows per page on compute node:
 
 Maybe that is fast enough?  Little need to go much faster if we can reload
 the whole data set in under 2 hours.
+
+## Future Work
+
+Get rid of curl altogther using the Perl ``HTTP::Request`` and ``Apache::Solr`` modules.
+
+My local perl is missing ``Apache::Solr::Json``, so put it in a docker container so that we can 
+``cpanm install Apache::Solr::Json``?
+
+``cpan -T Net::SSLeay`` is also needed.
+
+Ironically, curl'ing json into a file is fast, and ``docker exec .. post -c``
+is also pretty fast.  Having Perl do the request and then parse the response
+into JSON objects to load directly seems much slower.  So this approach may
+not pay off.
+
+But, see the above note on the "big pages and threads" loader being fast enough.
