@@ -7,8 +7,7 @@ These are some raw notes on experimenting with a Solr docker image.
 The first step is to get Solr running locally. 
 My strategy for most things it to run docker containers if possible. 
 It seems that for Solr, it is possible!
-Sure enough, there is an official docker container on dockerhup called solr.
-https://hub.docker.com/\_/solr
+Sure enough, there is an official docker container on dockerhub called solr.
 
 Which says to:
 
@@ -59,7 +58,7 @@ $ mkdir solrdata
 $ docker run -d -v "$PWD/solrdata:/var/solr" -p 8983:8983 --name my_solr solr:8 solr-precreate gettingstarted
 ```
 
-This creates a cor called gettingstarted, I used osti for my demo.
+This creates a core called gettingstarted, I used osti for my demo.
 
 Note: I had to chmod og+w solrdata too, the container runs as a userid 
 8983/groupid 8983?  Another solution would be to create that user/group on the
